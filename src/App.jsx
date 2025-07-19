@@ -368,11 +368,23 @@ const App = () => {
   };
 
   const handleStartGame = (settings) => {
-    setGameSettings(settings);
-    setCurrentPage('game'); // Placeholder for game page
-    console.log('Starting game with settings:', settings);
-    // In a real app, you'd render the actual game component here
+    fetch('http://localhost:5000/start_game', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ level: settings.level }) // you can also send more settings if needed
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log("Backend response:", data);
+        setGameSettings(settings);
+        setCurrentPage('game'); // Only transition to game after backend initializes it
+      })
+      .catch(err => {
+        console.error("Failed to start game on backend:", err);
+        // Optionally show an error alert or message to the user here
+      });
   };
+
 
   const handleAdvancedConfig = () => {
     setCurrentPage('advancedconfig');
