@@ -1,57 +1,102 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
-    overflow-y: hidden; /* Prevent vertical scrolling */
-    background-color: #FFFBE6; /* Same as your main div */
-  }
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
 
-  @keyframes slideInLeft {
-    0% {
-      transform: translateX(-100%);
-      opacity: 0;
-    }
-    100% {
-      transform: translateX(0);
-      opacity: 1;
-    }
+  color-scheme: light dark;
+  color: #F5EFD5;
+  background-color: #a33d3d;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  font-weight: 500;
+  color: none;
+  text-decoration: inherit;
+}
+a:hover {
+  color: none;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  height: 100vh;
+  /*overflow: hidden;*/
+}
+
+html {
+  height: 100vh;
+  /*overflow: hidden;*/
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
+  outline: none;
+}
+button:hover {
+  border-color: none;
+}
+button:focus,
+button:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Remove focus styles globally */
+*:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Remove blue highlight on tap for mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-focus-ring-color: transparent;
+}
+
+/* Remove default select styling */
+select:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Remove input focus styles */
+input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #F5EFD5;
+    background-color: #255935;
   }
-  
-  @keyframes slideInRight {
-    0% {
-      transform: translateX(100%);
-      opacity: 0;
-    }
-    100% {
-      transform: translateX(0);
-      opacity: 1;
-    }
+  a:hover {
+    color: none;
   }
-  
-  @keyframes fadeIn {
-    0% {
-      opacity: 0;
-    }
-    100% {
-      opacity: 1;
-    }
+  button {
+    background-color: #F5EFD5;
   }
-  
-  .animate-slide-in-left {
-    animation: slideInLeft 1s forwards;
-  }
-  
-  .animate-slide-in-right {
-    animation: slideInRight 1s forwards;
-  }
-  
-  .animate-fade-in {
-    animation: fadeIn 1s forwards;
-  }
-  
+}
