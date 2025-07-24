@@ -3,12 +3,10 @@ import React, { useState } from 'react';
 import GameBoardPage from './components/GameBoardPage';
 
 //ColorSelector Component
-const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blockedColor }) => {
-  const [open, setOpen] = useState(false);
-
+const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blockedColor, isOpen, setIsOpen }) => {
   const handleSelect = (value) => {
     setSelectedColor(value);
-    setOpen(false);
+    setIsOpen(false);
   };
 
   // Opciones filtradas
@@ -19,7 +17,7 @@ const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blocke
       <span className="text-[#255935] font-oswald font-semibold mb-2">{label}</span>
 
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between border border-[#A4A77E] border-2 rounded px-3 py-1 bg-[#E6DCB7] text-[#255935] font-oswald font-medium text-lg focus:outline-none w-[9.7rem]"
       >
         <img
@@ -39,21 +37,25 @@ const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blocke
         </svg>
       </button>
 
-      {open && (
-        <div className="absolute z-10 mt-1 bg-white border border-[#255935] rounded w-44 shadow-lg">
-          {filteredOptions.map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => handleSelect(opt.value)}
-              className="flex items-center w-full px-3 py-1 hover:bg-[#E6DCB7] transition"
-            >
-              <img
-                src={`/${capitalizeFirstLetter(opt.value)}Chip.png`}
-                alt={`${opt.label} chip`}
-                className="w-6 h-6 mr-2"
-              />
-              <span className="text-[#255935] font-oswald">{opt.label}</span>
-            </button>
+      {isOpen && (
+        <div className="absolute z-10 mt-1 bg-[#F5EFD5] border-[#A4A77E] border-2 rounded w-44 overflow-hidden">
+          {filteredOptions.map((opt, index) => (
+            <div key={opt.value}>
+              <button
+                onClick={() => handleSelect(opt.value)}
+                className="flex items-center w-full px-3 py-1 hover:bg-[#E6DCB7] transition"
+              >
+                <img
+                  src={`/${capitalizeFirstLetter(opt.value)}Chip.png`}
+                  alt={`${opt.label} chip`}
+                  className="w-6 h-6 mr-2"
+                />
+                <span className="text-[#255935] font-oswald">{opt.label}</span>
+              </button>
+              {index < filteredOptions.length - 1 && (
+                <div className="border-b-2 border-[#A4A77E]"></div>
+              )}
+            </div>
           ))}
         </div>
       )}
@@ -71,7 +73,7 @@ const capitalizeFirstLetter = (str) => {
 // LandingPage Component
 const LandingPage = ({ onGetStarted }) => {
   return (
-    <div className="min-h-screen flesvgx items-center justify-center bg-[#255935] font-open-sans p-4">
+    <div className="min-h-screen flex items-center justify-center bg-[#255935] font-open-sans p-4">
       <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between p-8">
         {/* Left Section */}
         <div className="text-center md:text-left mb-8 md:mb-0 md:mr-8">
@@ -106,6 +108,8 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
   const [level, setLevel] = useState(2);
   const [youColor, setYouColor] = useState('orange');
   const [aiColor, setAiColor] = useState('red');
+  const [youColorOpen, setYouColorOpen] = useState(false);
+  const [aiColorOpen, setAiColorOpen] = useState(false);
 
   const colorOptions = [
     { value: 'orange', label: 'Orange' },
@@ -114,13 +118,23 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
     { value: 'black', label: 'Black' },
   ];
 
+  const handleYouColorOpen = (isOpen) => {
+    setYouColorOpen(isOpen);
+    if (isOpen) setAiColorOpen(false); // Close the other dropdown
+  };
+
+  const handleAiColorOpen = (isOpen) => {
+    setAiColorOpen(isOpen);
+    if (isOpen) setYouColorOpen(false); // Close the other dropdown
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#255935] font-open-sans">
       <div className="bg-[#F5EFD5] p-8 rounded-3xl w-full max-w-sm">
-        <div className="flex justify-left mb-2">
+        <div className="flex justify-left">
           <button
             onClick={onGoHome}
-            className="text-[#E6DCB7] hover:text-[#E6DCB7] transition duration-300"
+            className="text-[#E6DCB7] hover:text-[#E6DCB7] transition duration-300 -ml-4"
             aria-label="Go to Home"
           >
             <img
@@ -131,7 +145,7 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
           </button>
         </div>
         {/* Title */}
-        <h2 className="text-5xl font-oswald font-medium text-center text-[#255935] mb-6 tracking-1p">GAME SETTINGS</h2>
+        <h2 className="text-[3.2rem] font-oswald font-medium text-center text-[#255935] mb-2 tracking-1p">GAME SETTINGS</h2>
 
         {/* Mode */}
         <div className="mb-2">
@@ -199,27 +213,31 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
         <div className="mb-6">
           <h3 className="text-xl font-oswald font-medium text-[#255935] mb-2">TEAM COLORS</h3>
           <div className="flex justify-evenly gap-2">
-            <ColorSelector
-              label={mode === '1player' ? 'YOU' : 'PLAYER 1'}
-              selectedColor={youColor}
-              setSelectedColor={setYouColor}
-              options={colorOptions}
-              blockedColor={aiColor}  // ← bloquea el color elegido por AI
-            />
-            <ColorSelector
-              label={mode === '1player' ? 'AI' : 'PLAYER 2'}
-              selectedColor={aiColor}
-              setSelectedColor={setAiColor}
-              options={colorOptions}
-              blockedColor={youColor}  // ← bloquea el color elegido por YOU
-            />
-          </div>
+              <ColorSelector
+                label={mode === '1player' ? 'YOU' : 'PLAYER 1'}
+                selectedColor={youColor}
+                setSelectedColor={setYouColor}
+                options={colorOptions}
+                blockedColor={aiColor}
+                isOpen={youColorOpen}
+                setIsOpen={handleYouColorOpen}
+              />
+              <ColorSelector
+                label={mode === '1player' ? 'AI' : 'PLAYER 2'}
+                selectedColor={aiColor}
+                setSelectedColor={setAiColor}
+                options={colorOptions}
+                blockedColor={youColor}
+                isOpen={aiColorOpen}
+                setIsOpen={handleAiColorOpen}
+              />
+            </div>
         </div>
 
         {/* Start Button */}
         <button
           onClick={() => onStartGame({ mode, level, youColor, aiColor })}
-          className="w-full bg-[#255935] text-[#F5EFD5] font-oswald font-bold text-2xl py-3 rounded transition duration-200 hover:bg-[#2a4d31] mb-2"
+          className="w-full bg-[#255935] text-[#F5EFD5] font-oswald font-bold text-2xl py-3 transition duration-200 hover:bg-[#2a4d31] mb-2"
         >
           START
         </button>
@@ -248,27 +266,30 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#255935] font-open-sans p-4">
-      <div className="bg-[#F5EFD5] p-8 rounded-3xl w-full max-w-md">
-        <div className="flex items-center justify-center mb-5">
+      <div className="bg-[#F5EFD5] p-8 rounded-3xl w-full max-w-sm">
+        <div className="flex justify-left mb-2">
           <button
             onClick={onGoHome}
-            className="text-[#255935] hover:text-[#2a4d31] transition duration-300 mr-0"
+            className="text-[#E6DCB7] hover:text-[#E6DCB7] transition duration-300 -ml-4"
             aria-label="Go to Home"
           >
             <img
               src="/Home.svg"
               alt="Home"
-              className="h-5 w-5"
+              className="h-6 w-6"
             />
           </button>
-          <h2 className="text-3xl font-oswald font-medium text-[#255935] tracking-1p">Advanced Configurations</h2>
+        </div>
+        <div className="flex items-center justify-center mb-5">
+
+          <h2 className="text-4xl font-oswald font-medium text-center text-[#255935] mb-6 tracking-1p">ADVANCED CONFIGURATIONS</h2>
         </div>
 
         
 
         {/* Difficulty Level */}
         <div className="mb-5">
-          <h3 className="text-2xl font-oswald font-medium text-[#255935] mb-2">DIFFICULTY LEVEL</h3>
+          <h3 className="text-xl font-oswald font-medium text-[#255935] mb-2">DIFFICULTY LEVEL</h3>
           <div className="flex flex-wrap justify-around bg-[#F5EFD5] rounded-lg p-2">
             {['Easy', 'Medium', 'Hard', 'Dynamic'].map((diff) => (
               <button
@@ -287,7 +308,7 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
         {/* Play with Timer */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-2xl font-oswald font-medium text-[#255935] mb-2">Play with timer</h3>
+            <h3 className="text-xl font-oswald font-medium text-[#255935] mb-2">Play with timer</h3>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -316,10 +337,13 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
         </div>
 
         {/* Max turns for Draw */}
-        <div className="mb-16">
-          {/* New flex container to hold the heading and the dropdown side-by-side */}
-          <div className="flex items-center gap-4"> {/* Added flex, items-center for vertical alignment, and gap-4 for spacing */}
-            <h3 className="text-2xl font-oswald font-medium text-[#255935]">Max turns for Draw</h3>
+        <div className="mb-6">
+          {/* The parent container needs to be a flex container that spans the full width */}
+          {/* If this div isn't already taking full width, consider adding 'w-full' to it or its higher parent */}
+          <div className="flex items-center"> {/* Removed gap-3 and justify-end from this container */}
+            <h3 className="text-xl font-oswald font-medium text-[#255935] mb-2 mr-auto"> {/* Added mr-auto here */}
+              Max turns for Draw
+            </h3>
             <div className="relative">
               <select
                 value={maxTurns}
@@ -450,7 +474,7 @@ const App = () => {
   }
 
   return (
-    <div className="App min-h-screen w-full flex items-center justify-center bg-[#255935] p-4"> {/* Added classes here */}
+    <div className="App min-h-screen w-full flex items-center justify-center bg-[#255935] p-4 select-none"> {/* Added classes here */}
       {/* Tailwind CSS CDN */}
       <script src="https://cdn.tailwindcss.com"></script>
       {/* Google Fonts - Oswald for titles, Open Sans for text */}
