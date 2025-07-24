@@ -16,10 +16,10 @@ const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blocke
     <div className="relative flex flex-col items-start">
       <span className="text-[#255935] font-oswald font-semibold mb-2">{label}</span>
 
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between border border-[#A4A77E] border-2 px-3 py-1 bg-[#E6DCB7] text-[#255935] font-oswald font-medium text-lg focus:outline-none w-[9.7rem]"
-      >
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center justify-between border border-[#A4A77E] border-2 px-3 py-1 bg-[#E6DCB7] text-[#255935] font-oswald font-medium text-lg focus:outline-none w-full"
+        >
         <img
           src={`/${capitalizeFirstLetter(selectedColor)}Chip.png`}
           alt={`${selectedColor} chip`}
@@ -77,8 +77,8 @@ const LandingPage = ({ onGetStarted }) => {
       <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between p-8">
         {/* Left Section */}
         <div className="text-center md:text-left mb-8 md:mb-0 md:mr-8">
-          <h1 className="font-oswald text-4xl md:text-8xl font-extrabold mb-4 leading-tight">MASTERGOAL</h1>
-          <h2 className="font-oswald text-2xl md:text-4xl font-semibold mb-6">STRATEGY FOOTBALL BOARD GAME</h2>
+          <h1 className="font-oswald text-6xl md:text-8xl font-extrabold mb-4 leading-tight">MASTERGOAL</h1>
+          <h2 className="font-oswald text-[1.45rem] md:text-[2.35rem] font-semibold mb-6">STRATEGY FOOTBALL BOARD GAME</h2>
           <p className="font-open-sans text-lg md:text-xl mb-10 max-w-md mx-auto md:mx-0">
             A unique strategy game that combines the excitement of football with deep tactical decision-making and smart positioning.
           </p>
@@ -130,7 +130,7 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#255935] font-open-sans">
-      <div className="bg-[#F5EFD5] p-8 rounded-3xl w-full max-w-sm">
+      <div className="bg-[#F5EFD5] p-8 rounded-3xl w-full max-w-xs md:max-w-sm">
         <div className="flex justify-left">
           <button
             onClick={onGoHome}
@@ -213,6 +213,7 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
         <div className="mb-6">
           <h3 className="text-xl font-oswald font-medium text-[#255935] mb-2">TEAM COLORS</h3>
           <div className="flex justify-evenly gap-2">
+             <div className="flex-1">
               <ColorSelector
                 label={mode === '1player' ? 'YOU' : 'PLAYER 1'}
                 selectedColor={youColor}
@@ -222,6 +223,8 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
                 isOpen={youColorOpen}
                 setIsOpen={handleYouColorOpen}
               />
+              </div>
+            <div className="flex-1">
               <ColorSelector
                 label={mode === '1player' ? 'AI' : 'PLAYER 2'}
                 selectedColor={aiColor}
@@ -231,6 +234,7 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
                 isOpen={aiColorOpen}
                 setIsOpen={handleAiColorOpen}
               />
+              </div>
             </div>
         </div>
 
@@ -266,7 +270,7 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#255935] font-open-sans p-4">
-      <div className="bg-[#F5EFD5] p-8 rounded-3xl w-full max-w-sm">
+      <div className="bg-[#F5EFD5] p-8 rounded-3xl w-full max-w-xs md:max-w-sm">
         <div className="flex justify-left mb-2">
           <button
             onClick={onGoHome}
@@ -282,7 +286,7 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
         </div>
         <div className="flex items-center justify-center mb-5">
 
-          <h2 className="text-4xl font-oswald font-medium text-center text-[#255935] mb-6 tracking-1p">ADVANCED CONFIGURATIONS</h2>
+          <h2 className="text-[2.8rem] font-oswald font-medium text-center text-[#255935] mb-6 tracking-1p">ADVANCED CONFIGURATIONS</h2>
         </div>
 
         
