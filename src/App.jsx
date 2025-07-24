@@ -18,7 +18,7 @@ const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blocke
 
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between border border-[#A4A77E] border-2 rounded px-3 py-1 bg-[#E6DCB7] text-[#255935] font-oswald font-medium text-lg focus:outline-none w-[9.7rem]"
+        className="flex items-center justify-between border border-[#A4A77E] border-2 px-3 py-1 bg-[#E6DCB7] text-[#255935] font-oswald font-medium text-lg focus:outline-none w-[9.7rem]"
       >
         <img
           src={`/${capitalizeFirstLetter(selectedColor)}Chip.png`}
@@ -474,7 +474,7 @@ const App = () => {
   }
 
   return (
-    <div className="App min-h-screen w-full flex items-center justify-center bg-[#255935] p-4 select-none"> {/* Added classes here */}
+    <div className="App h-screen  w-full flex items-center justify-center bg-[#255935] p-4 select-none"> {/* Added classes here */}
       {/* Tailwind CSS CDN */}
       <script src="https://cdn.tailwindcss.com"></script>
       {/* Google Fonts - Oswald for titles, Open Sans for text */}
