@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 
 import ChipIcon from './ChipIcon';
+import HomeConfirmationModal from './HomeConfirmationModal';
+import PauseGameModal from './PauseGameModal';
+import RestartConfirmationModal from './RestartConfirmationModal';
 
 // API Configuration - automatically detects environment
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
@@ -36,6 +39,61 @@ const GameBoardPage = ({
   const [serverGameState, setServerGameState] = useState(null);
   const [legalMoves, setLegalMoves] = useState([]);
   const [selectedPiece, setSelectedPiece] = useState(null);
+  const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
+  const [showPauseModal, setShowPauseModal] = useState(false);
+  const [showRestartConfirmation, setShowRestartConfirmation] = useState(false);
+
+  // Home button handlers
+  const handleHomeClick = () => {
+    setShowHomeConfirmation(true);
+  };
+  const handleConfirmHomeExit = () => {
+    setShowHomeConfirmation(false);
+    onGoHome();
+  };
+  const handleCancelHomeExit = () => {
+    setShowHomeConfirmation(false);
+  };
+  // Pause button handlers
+  const handlePauseClick = () => {
+    setShowPauseModal(true);
+    // TODO: Implement actual pause logic for the backend
+  };
+  const handleClosePauseModal = () => { // This acts as the "OK" action
+    setShowPauseModal(false);
+    // TODO: Implement actual resume logic for the backend
+  };
+
+  // Restart button handlers
+  const handleRestartClick = () => {
+    setShowRestartConfirmation(true);
+  };
+  const handleConfirmRestart = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/restart`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (res.ok) {
+        const response = await res.json();
+        setServerGameState(response.state);
+        setLegalMoves([]);
+        setSelectedPiece(null);
+        fetchGameData();
+        console.log("Game restarted successfully!");
+      } else {
+        console.error("Failed to restart game on backend.");
+      }
+    } catch (error) {
+      console.error("Error restarting game:", error);
+    } finally {
+      setShowRestartConfirmation(false);
+    }
+  };
+  const handleCancelRestart = () => {
+    setShowRestartConfirmation(false);
+  };
 
   // Coordinate conversion helpers
   const frontendToBackend = (frontendRow, frontendCol) => ({
@@ -356,17 +414,26 @@ const GameBoardPage = ({
       <div className="flex flex-col p-4 bg-[#1C0F01] space-y-6 rounded-xl shadow-lg">
         <button 
         className="p-3 flex items-center justify-center bg-transparent"
-        onClick={onGoHome}
+        onClick={handleHomeClick} 
         >
           <img src="/HomeVerticalMenu.svg" alt="Home" className="w-9 h-9" />
         </button>
-        <button className="p-3 flex items-center justify-center bg-transparent">
+        <button 
+        className="p-3 flex items-center justify-center bg-transparent"
+        onClick={handlePauseClick} 
+        >
           <img src="/PauseVerticalMenu.svg" alt="Pause" className="w-9 h-9" />
         </button>
-        <button className="p-3 flex items-center justify-center bg-transparent">
+        <button 
+        className="p-3 flex items-center justify-center bg-transparent"
+        onClick={handleRestartClick}
+        >
           <img src="/RestartVerticalMenu.svg" alt="Restart" className="w-9 h-9" />
         </button>
-        <button className="p-3 flex items-center justify-center bg-transparent">
+        <button 
+        className="p-3 flex items-center justify-center bg-transparent"
+        
+        >
           <img src="/AboutVerticalMenu.svg" alt="About" className="w-9 h-9" />
         </button>
         <button className="p-3 flex items-center justify-center bg-transparent">
@@ -489,6 +556,35 @@ const GameBoardPage = ({
           </div>
         </div>
       )}
+
+      {/* Home Confirmation Modal */}
+      <HomeConfirmationModal 
+        isOpen={showHomeConfirmation}
+        onClose={handleCancelHomeExit}
+        onConfirm={handleConfirmHomeExit}
+        message="You are about to exit to the main page. Are you sure?"
+        confirmButtonText="Quit / Continue"
+      />
+
+      {/* Pause Modal */}
+      <PauseGameModal 
+        isOpen={showPauseModal}
+        onClose={handleClosePauseModal}
+        onConfirm={handleClosePauseModal}
+        message="THE GAME IS PAUSED"
+        showCancelButton={false}
+        confirmButtonText="OK"
+      />
+
+      {/* Restart Confirmation Modal */}
+      <RestartConfirmationModal 
+        isOpen={showRestartConfirmation}
+        onClose={handleCancelRestart}
+        onConfirm={handleConfirmRestart}
+        message="Are you sure you want to restart the game?"
+        confirmButtonText="Restart"
+      />
+      {/* --- End of modals --- */}
     </div>
   );
 };
