@@ -387,32 +387,72 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
 
 // Main App Component
 const App = () => {
-  const [currentPage, setCurrentPage] = useState('landing'); // 'landing', 'preconfig', 'advancedconfig', 'game'
+  const [currentPage, setCurrentPage] = useState('landing');
   const [gameSettings, setGameSettings] = useState({});
-  const [advancedSettings, setAdvancedSettings] = useState({}); // Fixed: Changed from {} to useState({})
+  const [advancedSettings, setAdvancedSettings] = useState({});
 
   const handleGetStarted = () => {
     setCurrentPage('preconfig');
   };
 
   const handleStartGame = (settings) => {
-    fetch('https://backend-mastergoal.onrender.com', {
+    // Fixed: Use the correct endpoint URL
+    fetch('https://backend-mastergoal.onrender.com/start_game', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ level: settings.level }) // you can also send more settings if needed
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ level: settings.level })
     })
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then(data => {
         console.log("Backend response:", data);
         setGameSettings(settings);
-        setCurrentPage('game'); // Only transition to game after backend initializes it
+        setCurrentPage('game');
       })
       .catch(err => {
         console.error("Failed to start game on backend:", err);
-        // Optionally show an error alert or message to the user here
+        // Show user-friendly error message
+        alert("Failed to connect to game server. Please try again or check your internet connection.");
       });
   };
 
+  // Alternative: Add a fallback mode that works without backend
+  const handleStartGameWithFallback = (settings) => {
+    // Try to connect to backend first
+    fetch('https://backend-mastergoal.onrender.com/start_game', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ level: settings.level })
+    })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log("Backend response:", data);
+        setGameSettings(settings);
+        setCurrentPage('game');
+      })
+      .catch(err => {
+        console.error("Backend connection failed:", err);
+        console.log("Starting game in offline mode...");
+        // Continue with game initialization even if backend fails
+        setGameSettings(settings);
+        setCurrentPage('game');
+      });
+  };
 
   const handleAdvancedConfig = () => {
     setCurrentPage('advancedconfig');
@@ -420,18 +460,17 @@ const App = () => {
 
   const handleSaveAdvancedConfig = (settings) => {
     setAdvancedSettings(settings);
-    setCurrentPage('preconfig'); // Go back to pre-config after saving
+    setCurrentPage('preconfig');
     console.log('Saved advanced settings:', settings);
   };
 
   const handleCancelAdvancedConfig = () => {
-    setCurrentPage('preconfig'); // Go back to pre-config without saving
+    setCurrentPage('preconfig');
   };
 
   const handleGoHome = () => {
     setCurrentPage('landing');
   };
-
 
   let content;
   switch (currentPage) {
@@ -441,7 +480,7 @@ const App = () => {
     case 'preconfig':
       content = (
         <PreConfigPage
-          onStartGame={handleStartGame}
+          onStartGame={handleStartGame} // or use handleStartGameWithFallback
           onAdvancedConfig={handleAdvancedConfig}
           onGoHome={handleGoHome}
         />
@@ -478,15 +517,13 @@ const App = () => {
   }
 
   return (
-    <div className="App h-screen  w-full flex items-center justify-center bg-[#255935] p-4 select-none"> {/* Added classes here */}
-      {/* Tailwind CSS CDN */}
+    <div className="App h-screen w-full flex items-center justify-center bg-[#255935] p-4 select-none">
       <script src="https://cdn.tailwindcss.com"></script>
-      {/* Google Fonts - Oswald for titles, Open Sans for text */}
       <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
       <style>
         {`
         body {
-          font-family: 'Open Sans', sans-serif; /* Default text font */
+          font-family: 'Open Sans', sans-serif;
         }
         .font-oswald {
           font-family: 'Oswald', sans-serif;
@@ -494,12 +531,11 @@ const App = () => {
         .font-open-sans {
           font-family: 'Open Sans', sans-serif;
         }
-        /* Custom styles for select dropdown to hide default arrow */
         select {
           -webkit-appearance: none;
           -moz-appearance: none;
           appearance: none;
-          background-image: none; /* Remove default arrow for some browsers */
+          background-image: none;
         }
         `}
       </style>
