@@ -396,7 +396,7 @@ const App = () => {
   };
 
   const handleStartGame = (settings) => {
-    fetch('http://localhost:5000/start_game', {
+    fetch('https://backend-mastergoal.onrender.com', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ level: settings.level }) // you can also send more settings if needed
