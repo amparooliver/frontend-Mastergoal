@@ -2,6 +2,14 @@ import React, { useEffect, useState } from 'react';
 
 import GameBoardPage from './components/GameBoardPage';
 
+// API Configuration - automatically detects environment
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://backend-mastergoal.onrender.com'
+  : 'http://localhost:5000';
+
+console.log('App.jsx - Current environment:', process.env.NODE_ENV);
+console.log('App.jsx - Using API URL:', API_BASE_URL);
+
 //ColorSelector Component
 const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blockedColor, isOpen, setIsOpen }) => {
   const handleSelect = (value) => {
@@ -392,12 +400,12 @@ const App = () => {
   const [advancedSettings, setAdvancedSettings] = useState({});
   const [backendStatus, setBackendStatus] = useState('checking'); // 'checking', 'online', 'offline'
 
-  // Wake up the Render backend service when app loads (for free tier)
+  // Wake up the backend service when app loads (for free tier)
   useEffect(() => {
     const wakeUpBackend = async () => {
       try {
         console.log('Waking up backend service...');
-        const response = await fetch('https://backend-mastergoal.onrender.com/', {
+        const response = await fetch(`${API_BASE_URL}/`, {
           method: 'GET',
           headers: {
             'Accept': 'application/json'
@@ -431,8 +439,8 @@ const App = () => {
       return;
     }
 
-    // Fixed: Use the correct endpoint URL
-    fetch('https://backend-mastergoal.onrender.com/start_game', {
+    // Use the dynamic API_BASE_URL
+    fetch(`${API_BASE_URL}/start_game`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -510,7 +518,7 @@ const App = () => {
   let content;
   switch (currentPage) {
     case 'landing':
-      content = <LandingPage onGetStarted={handleGetStarted} />;
+      content = <LandingPage onGetStarted={handleGetStarted} backendStatus={backendStatus} />;
       break;
     case 'preconfig':
       content = (

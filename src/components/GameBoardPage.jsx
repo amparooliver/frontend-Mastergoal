@@ -2,6 +2,14 @@ import React, { useEffect, useState } from 'react';
 
 import ChipIcon from './ChipIcon';
 
+// API Configuration - automatically detects environment
+const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://backend-mastergoal.onrender.com'
+  : 'http://localhost:5000';
+
+console.log('Current environment:', process.env.NODE_ENV);
+console.log('Using API URL:', API_BASE_URL);
+
 const getChipColor = (colorName) => {
     const colorMap = {
       'orange': '#F18F01',
@@ -44,9 +52,9 @@ const GameBoardPage = ({
   const fetchGameData = async () => {
     try {
       const [stateRes, movesRes] = await Promise.all([
-        fetch('http://localhost:5000/state'),
-        fetch('http://localhost:5000/legal_moves')
-      ]);
+      fetch(`${API_BASE_URL}/state`),
+      fetch(`${API_BASE_URL}/legal_moves`)
+    ]);
       
       const gameState = await stateRes.json();
       const moves = await movesRes.json();
@@ -203,7 +211,7 @@ const GameBoardPage = ({
       console.log(`Attempting ${moveType} from backend (${fromBackend.backendRow}, ${fromBackend.backendCol}) to backend (${toBackend.backendRow}, ${toBackend.backendCol})`);
 
       try {
-        const res = await fetch("http://localhost:5000/move", {
+        const res = await fetch(`${API_BASE_URL}/move`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
