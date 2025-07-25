@@ -390,12 +390,47 @@ const App = () => {
   const [currentPage, setCurrentPage] = useState('landing');
   const [gameSettings, setGameSettings] = useState({});
   const [advancedSettings, setAdvancedSettings] = useState({});
+  const [backendStatus, setBackendStatus] = useState('checking'); // 'checking', 'online', 'offline'
+
+  // Wake up the Render backend service when app loads (for free tier)
+  useEffect(() => {
+    const wakeUpBackend = async () => {
+      try {
+        console.log('Waking up backend service...');
+        const response = await fetch('https://backend-mastergoal.onrender.com/', {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          console.log('Backend is awake and ready!');
+          setBackendStatus('online');
+        } else {
+          console.log('Backend responded but with error:', response.status);
+          setBackendStatus('offline');
+        }
+      } catch (error) {
+        console.log('Backend wake-up failed:', error);
+        setBackendStatus('offline');
+      }
+    };
+
+    wakeUpBackend();
+  }, []); // Empty dependency array means this runs once when component mounts
 
   const handleGetStarted = () => {
     setCurrentPage('preconfig');
   };
 
   const handleStartGame = (settings) => {
+    // Show loading state if backend is still starting up
+    if (backendStatus === 'checking') {
+      alert('Please wait, the game server is starting up...');
+      return;
+    }
+
     // Fixed: Use the correct endpoint URL
     fetch('https://backend-mastergoal.onrender.com/start_game', {
       method: 'POST',
@@ -419,7 +454,7 @@ const App = () => {
       .catch(err => {
         console.error("Failed to start game on backend:", err);
         // Show user-friendly error message
-        alert("Failed to connect to game server. Please try again or check your internet connection.");
+        alert("Failed to connect to game server. The server might be starting up - please try again in a moment.");
       });
   };
 
