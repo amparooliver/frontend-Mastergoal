@@ -322,11 +322,37 @@ const GameBoardPage = ({
 
   if (!serverGameState) {
     return (
-      <div className="flex items-center justify-center h-screen text-white text-2xl">
-        Loading game...
+      <div className="flex flex-col items-center justify-center h-screen bg-[#255935] text-[#F5EFD5] font-bold">
+        <div className="text-2xl mb-6 animate-pulse">Loading Mastergoal...</div>
+        
+        {/* Spinner */}
+        <div className="w-16 h-16 border-4 border-t-[#F5EFD5] border-[#1C0F01] rounded-full animate-spin mb-4" />
+
+        {/* Progress bar animation */}
+        <div className="relative w-64 h-3 bg-[#1C0F01] rounded-full overflow-hidden">
+          <div className="absolute inset-0 bg-[#F5EFD5] animate-loading-bar rounded-full" />
+        </div>
+
+        {/* Custom animation class */}
+        <style>
+          {`
+            @keyframes loading-bar {
+              0% { transform: translateX(-100%); }
+              50% { transform: translateX(0%); }
+              100% { transform: translateX(100%); }
+            }
+
+            .animate-loading-bar {
+              width: 50%;
+              height: 100%;
+              animation: loading-bar 2s infinite;
+            }
+          `}
+        </style>
       </div>
     );
   }
+
 
   const renderFieldBorders = () => {
     return (

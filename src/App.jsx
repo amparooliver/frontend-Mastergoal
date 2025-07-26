@@ -51,7 +51,7 @@ const ColorSelector = ({ label, selectedColor, setSelectedColor, options, blocke
             <div key={opt.value}>
               <button
                 onClick={() => handleSelect(opt.value)}
-                className="flex items-center w-full px-3 py-1 hover:bg-[#E6DCB7] transition"
+                className="flex items-center w-full px-3 py-1 hover:bg-[#D2C7A0] transition"
               >
                 <img
                   src={`/${capitalizeFirstLetter(opt.value)}Chip.png`}
@@ -85,14 +85,14 @@ const LandingPage = ({ onGetStarted }) => {
       <div className="w-full max-w-6xl flex flex-col md:flex-row items-center justify-between p-8">
         {/* Left Section */}
         <div className="text-center md:text-left mb-8 md:mb-0 md:mr-8">
-          <h1 className="font-oswald text-6xl md:text-8xl font-extrabold mb-4 leading-tight">MASTERGOAL</h1>
-          <h2 className="font-oswald text-[1.45rem] md:text-[2.35rem] font-semibold mb-6">STRATEGY FOOTBALL BOARD GAME</h2>
-          <p className="font-open-sans text-lg md:text-xl mb-10 max-w-md mx-auto md:mx-0">
+          <h1 className="font-oswald text-6xl text-[#F5EFD5] md:text-8xl font-extrabold mb-2 leading-tight">MASTERGOAL</h1>
+          <h2 className="font-oswald text-[1.45rem] text-[#F5EFD5] md:text-[2.35rem] font-semibold mb-6">STRATEGY FOOTBALL BOARD GAME</h2>
+          <p className="font-open-sans text-lg text-[#F5EFD5] md:text-xl mb-8 max-w-md mx-auto md:mx-0">
             A unique strategy game that combines the excitement of football with deep tactical decision-making and smart positioning.
           </p>
           <button
             onClick={onGetStarted}
-            className="bg-[#F5EFD5] text-[#255935] font-bold py-3 px-8 rounded-lg shadow-lg hover:bg-gray-200 transition duration-300 transform hover:scale-105 text-xl"
+            className="bg-[#F5EFD5] text-[#255935] font-bold py-3 px-8 rounded-lg shadow-lg mb-2 hover:bg-[#D2C7A0] transition duration-300 transform hover:scale-105 text-xl"
           >
             GET STARTED
           </button>
@@ -162,7 +162,7 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
             <button
               onClick={() => setMode('1player')}
               className={`flex flex-row items-center justify-center py-3 px-2 rounded border w-full ${
-                mode === '1player' ? 'bg-[#255935] text-[#F5EFD5]' : 'bg-[#E6DCB7] text-[#255935]  border-[#A4A77E] border-2'
+                mode === '1player' ? 'bg-[#255935] text-[#F5EFD5]' : 'bg-[#E6DCB7] text-[#255935]  border-[#A4A77E] border-2 hover:bg-[#D2C7A0] transition duration-300 transform'
               } transition duration-200`}
             >
               {/* SVG */}
@@ -180,7 +180,7 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
             <button
               onClick={() => setMode('2players')}
               className={`flex flex-row items-center justify-center py-3 px-2 rounded border w-full ${
-                mode === '2players' ? 'bg-[#255935] text-[#F5EFD5]' : 'bg-[#E6DCB7] text-[#255935]  border-[#A4A77E] border-2'
+                mode === '2players' ? 'bg-[#255935] text-[#F5EFD5]' : 'bg-[#E6DCB7] text-[#255935] border-[#A4A77E] border-2 hover:bg-[#D2C7A0] transition duration-300 transform'
               } transition duration-200`}
             >
               {/* SVG */}
@@ -207,7 +207,7 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
                   key={lvl}
                   onClick={() => setLevel(lvl)}
                   className={`w-13 h-13 rounded-full border flex items-center justify-center font-bold ${
-                    level === lvl ? 'bg-[#255935] text-[#F5EFD5]' : 'bg-[#E6DCB7] text-[#255935] border-[#A4A77E] border-2'
+                    level === lvl ? 'bg-[#255935] text-[#F5EFD5]' : 'bg-[#E6DCB7] text-[#255935] border-[#A4A77E] border-2 hover:bg-[#D2C7A0] transition duration-300 transform'
                   } transition duration-200`}
                 >
                   {lvl}
@@ -272,9 +272,11 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
   const [difficulty, setDifficulty] = useState('medium'); // easy, medium, hard, dynamic
   const [playWithTimer, setPlayWithTimer] = useState(false);
   const [timerDuration, setTimerDuration] = useState(30); // in seconds
+  const [limitTurns, setLimitTurns] = useState(false);
   const [maxTurns, setMaxTurns] = useState(40);
 
-  const timerOptions = [10, 20, 30, 40, 50, 60]; // 60s for 1m
+  const timerOptions = [15, 30, 45, 60, 90, 120]; // in seconds
+  const turnOptions = [20, 30, 40, 50, 60, 80]; // maximum turns
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#255935] font-open-sans p-4">
@@ -308,7 +310,7 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
                 key={diff}
                 onClick={() => setDifficulty(diff.toLowerCase())}
                 className={`flex-1 py-3 px-2 rounded-lg font-oswald font-medium transition duration-300 min-w-[calc(50%-0.5rem)] sm:min-w-0 sm:flex-none mb-2 sm:mb-0 ${
-                  difficulty === diff.toLowerCase() ? 'bg-[#255935] text-[#F5EFD5]' : 'text-[#A4A77E] hover:bg-[#E6DCB7]'
+                  difficulty === diff.toLowerCase() ? 'bg-[#255935] text-[#F5EFD5]' : 'text-[#A4A77E] hover:bg-[#D2C7A0]'
                 } ${diff === 'Easy' ? 'mr-1 sm:mr-2' : ''} ${diff === 'Medium' ? 'sm:mr-2' : ''} ${diff === 'Hard' ? 'mr-1 sm:mr-2' : ''}`}
               >
                 {diff}
@@ -320,7 +322,7 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
         {/* Play with Timer */}
         <div className="mb-5">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xl font-oswald font-medium text-[#255935] mb-2">Play with timer</h3>
+            <h3 className="text-xl font-oswald font-medium text-[#255935]">Turn Timer</h3>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
                 type="checkbox"
@@ -338,52 +340,58 @@ const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
                   key={time}
                   onClick={() => setTimerDuration(time)}
                   className={`flex-1 py-3 px-2 rounded-lg font-oswald font-medium transition duration-300 min-w-[calc(33%-0.5rem)] sm:min-w-0 sm:flex-none mb-2 sm:mb-0 ${
-                    timerDuration === time ? 'bg-[#255935] text-[#F5EFD5]' : 'text-[#255935] hover:bg-[#E6DCB7] text-[#A4A77E]'
-                  } ${time === 0 || time === 20 || time === 40 ? 'mr-1 sm:mr-2' : ''} ${time === 10 || time === 30 || time === 50 ? 'mr-1 sm:mr-2' : ''}`}
+                    timerDuration === time ? 'bg-[#255935] text-[#F5EFD5]' : 'text-[#255935] hover:bg-[#D2C7A0] text-[#A4A77E]'
+                  } ${time === 15 || time === 45 || time === 90 ? 'mr-1 sm:mr-2' : ''} ${time === 30 || time === 60 || time === 120 ? 'mr-1 sm:mr-2' : ''}`}
                 >
-                  {time === 0 ? '0s' : time < 60 ? `${time}s` : '1m'}
+                  {time < 60 ? `${time}s` : time === 60 ? '1m' : time === 90 ? '1m 30s' : '2m'}
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Max turns for Draw */}
+        {/* Limit Maximum Turns */}
         <div className="mb-6">
-          {/* The parent container needs to be a flex container that spans the full width */}
-          {/* If this div isn't already taking full width, consider adding 'w-full' to it or its higher parent */}
-          <div className="flex items-center"> {/* Removed gap-3 and justify-end from this container */}
-            <h3 className="text-xl font-oswald font-medium text-[#255935] mb-2 mr-auto"> {/* Added mr-auto here */}
-              Max turns for Draw
-            </h3>
-            <div className="relative">
-              <select
-                value={maxTurns}
-                onChange={(e) => setMaxTurns(parseInt(e.target.value))}
-                className="w-40 bg-[#E6DCB7] text-[#255935] border-[#A4A77E] border-2 font-bold py-3 px-4 pr-8 rounded-lg appearance-none cursor-pointer"
-              >
-                {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((turns) => (
-                  <option key={turns} value={turns}>{turns} turns</option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#255935]">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-              </div>
-            </div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xl font-oswald font-medium text-[#255935]">Limit Max Turns</h3>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={limitTurns}
+                onChange={() => setLimitTurns(!limitTurns)}
+              />
+              <div className="w-11 h-6 bg-[#E6DCB7] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-[#F5EFD5] after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#255935]"></div>
+            </label>
           </div>
+          {limitTurns && (
+            <div className="flex flex-wrap justify-around bg-[#F5EFD5] rounded-lg p-2">
+              {turnOptions.map((turns) => (
+                <button
+                  key={turns}
+                  onClick={() => setMaxTurns(turns)}
+                  className={`flex-1 py-3 px-2 rounded-lg font-oswald font-medium transition duration-300 min-w-[calc(33%-0.5rem)] sm:min-w-0 sm:flex-none mb-2 sm:mb-0 ${
+                    maxTurns === turns ? 'bg-[#255935] text-[#F5EFD5]' : 'text-[#255935] hover:bg-[#D2C7A0] text-[#A4A77E]'
+                  } ${turns === 20 || turns === 40 || turns === 60 ? 'mr-1 sm:mr-2' : ''} ${turns === 30 || turns === 50 || turns === 80 ? 'mr-1 sm:mr-2' : ''}`}
+                >
+                  {turns}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row justify-around">
           <button
             onClick={onCancel}
-            className="text-xl bg-[#E6DCB7] text-[#255935] font-oswald font-bold border-[#A4A77E] border-2 py-3 px-13 rounded-lg hover:bg-gray-400 transition duration-300 transform  mb-3 sm:mb-0 sm:mr-2 tracking-1p"
+            className="flex-1 text-xl bg-[#E6DCB7] text-[#255935] font-oswald font-bold border-[#A4A77E] border-2 rounded-lg hover:bg-[#D2C7A0] transition duration-300 transform  mb-3 sm:mb-0 sm:mr-2 tracking-1p"
           >
             Cancel
           </button>
           <button
-            onClick={() => onSave({ difficulty, playWithTimer, timerDuration, maxTurns })}
-            className="text-xl bg-[#255935] text-[#F5EFD5] font-bold py-3 px-13 rounded-lg hover:bg-[#2a4d31] transition duration-300 transform sm:ml-2 tracking-1p"
+            onClick={() => onSave({ difficulty, playWithTimer, timerDuration, limitTurns, maxTurns })}
+            className="flex-1 text-xl bg-[#255935] text-[#F5EFD5] font-oswald font-bold rounded-lg hover:bg-[#2a4d31] transition duration-300 transform sm:ml-2 tracking-1p"
           >
             Save
           </button>
@@ -548,10 +556,11 @@ const App = () => {
           team2Score={0}
           timerEnabled={advancedSettings.playWithTimer || false}
           timerValue={advancedSettings.timerDuration || 30}
+          turnsLimited={advancedSettings.limitTurns || false}
+          maxTurns={advancedSettings.limitTurns ? advancedSettings.maxTurns || 40 : null}
           team1Color={gameSettings.youColor || 'orange'}
           team2Color={gameSettings.aiColor || 'red'}
           difficulty={advancedSettings.difficulty || 'medium'}
-          maxTurns={advancedSettings.maxTurns || 40}
         />
       );
       break;
