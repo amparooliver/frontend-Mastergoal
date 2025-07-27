@@ -561,6 +561,8 @@ const App = () => {
           team1Color={gameSettings.youColor || 'orange'}
           team2Color={gameSettings.aiColor || 'red'}
           difficulty={advancedSettings.difficulty || 'medium'}
+          mode={gameSettings.mode || '1player'}
+          level={gameSettings.level || 1}
         />
       );
       break;

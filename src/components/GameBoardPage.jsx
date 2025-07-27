@@ -35,6 +35,8 @@ const GameBoardPage = ({
   team2Color = 'blue',
   difficulty = 'medium',
   maxTurns = 40,
+  mode = '1player',
+  level = 1,
 }) => {
   const [serverGameState, setServerGameState] = useState(null);
   const [legalMoves, setLegalMoves] = useState([]);
@@ -128,8 +130,28 @@ const GameBoardPage = ({
   };
 
   useEffect(() => {
-    fetchGameData();
-  }, []);
+    const startGame = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/start_game`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ level, mode: mode || '1player' })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setServerGameState(data.state);
+          await fetchGameData();
+        } else {
+          console.error("Failed to start game");
+        }
+      } catch (error) {
+        console.error("Error starting game:", error);
+      }
+    };
+
+    startGame();
+  }, [level]);
 
   const specialTiles = [
     { row: 3, col: 1 }, { row: 4, col: 1 }, { row: 5, col: 1 },
@@ -288,10 +310,26 @@ const GameBoardPage = ({
         if (response.success) {
           setServerGameState(response.state);
           setSelectedPiece(null);
-          console.log(`${moveType} accepted`);
-          
-          // Fetch new legal moves for the next turn
           await fetchGameData();
+          if (response.state.current_team === 'RIGHT') {
+            console.log("Sending AI move...");
+            try {
+              const aiRes = await fetch(`${API_BASE_URL}/ai_move`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+              });
+              const aiData = await aiRes.json();
+              if (aiData.success) {
+                setServerGameState(aiData.state);
+                await fetchGameData();
+                if (aiData.game_over) {
+                  alert(`Game Over! Winner: ${aiData.winner || 'None'}`);
+                }
+              }
+            } catch (err) {
+                console.error("AI move error:", err);
+              }
+          }
         } else {
           console.log("Move failed:", response.error);
         }
