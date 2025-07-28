@@ -111,13 +111,21 @@ const LandingPage = ({ onGetStarted }) => {
 };
 
 // PreConfigPage Component
-const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
+const PreConfigPage = ({ gameSettings = {}, setGameSettings, onStartGame, onAdvancedConfig, onGoHome }) => {
   const [mode, setMode] = useState('1player');
   const [level, setLevel] = useState(2);
   const [youColor, setYouColor] = useState('orange');
   const [aiColor, setAiColor] = useState('red');
   const [youColorOpen, setYouColorOpen] = useState(false);
   const [aiColorOpen, setAiColorOpen] = useState(false);
+
+  // Sync local state with props when gameSettings changes (e.g. after returning from AdvancedConfig)
+  useEffect(() => {
+    setMode(gameSettings.mode || '1player');
+    setLevel(gameSettings.level || 2);
+    setYouColor(gameSettings.youColor || 'orange');
+    setAiColor(gameSettings.aiColor || 'red');
+  }, [gameSettings]);
 
   const colorOptions = [
     { value: 'orange', label: 'Orange' },
@@ -256,7 +264,11 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
 
         {/* Advanced link */}
         <button
-          onClick={onAdvancedConfig}
+          onClick={() => {
+            // Save current selections before navigating
+            setGameSettings({ mode, level, youColor, aiColor });
+            onAdvancedConfig({ mode, level, youColor, aiColor });
+          }}
           className="w-full text-[#255935] text-center font-oswald font-bold underline text-lg"
         >
           Advanced Configurations
@@ -268,13 +280,21 @@ const PreConfigPage = ({ onStartGame, onAdvancedConfig, onGoHome }) => {
 
 
 // AdvancedConfigPage Component
-const AdvancedConfigPage = ({ onSave, onCancel, onGoHome }) => {
+const AdvancedConfigPage = ({ advancedSettings = {}, onSave, onCancel, onGoHome }) => {
   const [difficulty, setDifficulty] = useState('medium'); // easy, medium, hard, dynamic
   const [playWithTimer, setPlayWithTimer] = useState(false);
   const [timerDuration, setTimerDuration] = useState(30); // in seconds
   const [limitTurns, setLimitTurns] = useState(false);
   const [maxTurns, setMaxTurns] = useState(40);
 
+  useEffect(() => {
+    setDifficulty(advancedSettings.difficulty || 'medium');
+    setPlayWithTimer(advancedSettings.playWithTimer || false);
+    setTimerDuration(advancedSettings.timerDuration || 30);
+    setLimitTurns(advancedSettings.limitTurns || false);
+    setMaxTurns(advancedSettings.maxTurns || 40);
+  }, [advancedSettings]);
+  
   const timerOptions = [15, 30, 45, 60, 90, 120]; // in seconds
   const turnOptions = [20, 30, 40, 50, 60, 80]; // maximum turns
 
@@ -520,8 +540,10 @@ const App = () => {
   };
 
   const handleGoHome = () => {
+    setGameSettings({});         // Reset preconfig selections
+    setAdvancedSettings({});     // Reset advanced config selections
     setCurrentPage('landing');
-  };
+};
 
   let content;
   switch (currentPage) {
@@ -531,8 +553,13 @@ const App = () => {
     case 'preconfig':
       content = (
         <PreConfigPage
-          onStartGame={handleStartGame} // or use handleStartGameWithFallback
-          onAdvancedConfig={handleAdvancedConfig}
+          gameSettings={gameSettings}
+          setGameSettings={setGameSettings}
+          onStartGame={handleStartGame}
+          onAdvancedConfig={(currentSettings) => {
+            setGameSettings(currentSettings);
+            setCurrentPage('advancedconfig');
+          }}
           onGoHome={handleGoHome}
         />
       );
@@ -540,6 +567,7 @@ const App = () => {
     case 'advancedconfig':
       content = (
         <AdvancedConfigPage
+          advancedSettings={advancedSettings}
           onSave={handleSaveAdvancedConfig}
           onCancel={handleCancelAdvancedConfig}
           onGoHome={handleGoHome}
@@ -557,7 +585,7 @@ const App = () => {
           timerEnabled={advancedSettings.playWithTimer || false}
           timerValue={advancedSettings.timerDuration || 30}
           turnsLimited={advancedSettings.limitTurns || false}
-          maxTurns={advancedSettings.limitTurns ? advancedSettings.maxTurns || 40 : null}
+          num_turns={advancedSettings.limitTurns ? advancedSettings.maxTurns || 40 : null}
           team1Color={gameSettings.youColor || 'orange'}
           team2Color={gameSettings.aiColor || 'red'}
           difficulty={advancedSettings.difficulty || 'medium'}

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import ChipIcon from './ChipIcon';
+import TimerClock from './TimerClock';
 import HomeConfirmationModal from './HomeConfirmationModal';
 import PauseGameModal from './PauseGameModal';
 import RestartConfirmationModal from './RestartConfirmationModal';
@@ -10,33 +11,28 @@ const API_BASE_URL = process.env.NODE_ENV === 'production'
   ? 'https://backend-mastergoal.onrender.com'
   : 'http://localhost:5000';
 
-console.log('Current environment:', process.env.NODE_ENV);
-console.log('Using API URL:', API_BASE_URL);
-
 const getChipColor = (colorName) => {
-    const colorMap = {
-      'orange': '#F18F01',
-      'red': '#A40606',
-      'white': '#F5EFD5',
-      'black': '#1C0F01'
-    };
-    return colorMap[colorName] || '#FF8C00';
+  const colorMap = {
+    'orange': '#F18F01',
+    'red': '#A40606',
+    'white': '#F5EFD5',
+    'black': '#1C0F01'
+  };
+  return colorMap[colorName] || '#FF8C00';
 };
 
 const GameBoardPage = ({
   onGoHome,
-  team1Name = 'YOU',
-  team2Name = 'AI',
-  team1Score = 0,
-  team2Score = 0,
-  timerEnabled = true,
+  team1Name = 'PLAYER 1',
+  team2Name = 'PLAYER 2',
+  timerEnabled = false,
   timerValue = 30,
   team1Color = 'orange',
   team2Color = 'blue',
   difficulty = 'medium',
-  maxTurns = 40,
   mode = '1player',
   level = 1,
+  num_turns = null,
 }) => {
   const [serverGameState, setServerGameState] = useState(null);
   const [legalMoves, setLegalMoves] = useState([]);
@@ -44,32 +40,41 @@ const GameBoardPage = ({
   const [showHomeConfirmation, setShowHomeConfirmation] = useState(false);
   const [showPauseModal, setShowPauseModal] = useState(false);
   const [showRestartConfirmation, setShowRestartConfirmation] = useState(false);
+  const [remainingTime, setRemainingTime] = useState(timerValue);
+  const [lastTurnTeam, setLastTurnTeam] = useState(null);
+
+  // For local timer interval
+  const timerIntervalRef = useRef(null);
+
+  // Get scores from server game state
+  const getScores = () => {
+    if (!serverGameState) return { leftScore: 0, rightScore: 0 };
+    return {
+      leftScore: serverGameState.left_goals || 0,
+      rightScore: serverGameState.right_goals || 0
+    };
+  };
+
+  const { leftScore, rightScore } = getScores();
+
+  // Set team names based on mode
+  const displayTeam1Name = mode === '1player' ? 'YOU' : team1Name;
+  const displayTeam2Name = mode === '1player' ? 'AI' : team2Name;
 
   // Home button handlers
-  const handleHomeClick = () => {
-    setShowHomeConfirmation(true);
-  };
+  const handleHomeClick = () => setShowHomeConfirmation(true);
   const handleConfirmHomeExit = () => {
     setShowHomeConfirmation(false);
     onGoHome();
   };
-  const handleCancelHomeExit = () => {
-    setShowHomeConfirmation(false);
-  };
+  const handleCancelHomeExit = () => setShowHomeConfirmation(false);
+
   // Pause button handlers
-  const handlePauseClick = () => {
-    setShowPauseModal(true);
-    // TODO: Implement actual pause logic for the backend
-  };
-  const handleClosePauseModal = () => { // This acts as the "OK" action
-    setShowPauseModal(false);
-    // TODO: Implement actual resume logic for the backend
-  };
+  const handlePauseClick = () => setShowPauseModal(true);
+  const handleClosePauseModal = () => setShowPauseModal(false);
 
   // Restart button handlers
-  const handleRestartClick = () => {
-    setShowRestartConfirmation(true);
-  };
+  const handleRestartClick = () => setShowRestartConfirmation(true);
   const handleConfirmRestart = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/restart`, {
@@ -82,10 +87,8 @@ const GameBoardPage = ({
         setServerGameState(response.state);
         setLegalMoves([]);
         setSelectedPiece(null);
+        setLastTurnTeam(null);
         fetchGameData();
-        console.log("Game restarted successfully!");
-      } else {
-        console.error("Failed to restart game on backend.");
       }
     } catch (error) {
       console.error("Error restarting game:", error);
@@ -93,9 +96,7 @@ const GameBoardPage = ({
       setShowRestartConfirmation(false);
     }
   };
-  const handleCancelRestart = () => {
-    setShowRestartConfirmation(false);
-  };
+  const handleCancelRestart = () => setShowRestartConfirmation(false);
 
   // Coordinate conversion helpers
   const frontendToBackend = (frontendRow, frontendCol) => ({
@@ -112,38 +113,83 @@ const GameBoardPage = ({
   const fetchGameData = async () => {
     try {
       const [stateRes, movesRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/state`),
-      fetch(`${API_BASE_URL}/legal_moves`)
-    ]);
-      
+        fetch(`${API_BASE_URL}/state`),
+        fetch(`${API_BASE_URL}/legal_moves`)
+      ]);
       const gameState = await stateRes.json();
       const moves = await movesRes.json();
-      
-      console.log("Fetched game state:", gameState);
-      console.log("Fetched legal moves:", moves);
-      
       setServerGameState(gameState);
       setLegalMoves(moves);
+
+      // Calculate remaining time from backend
+      if (
+        timerEnabled &&
+        gameState.turn_start_time &&
+        gameState.timer_duration
+      ) {
+        const now = Date.now() / 1000;
+        const remaining = Math.ceil(
+          gameState.timer_duration - (now - gameState.turn_start_time)
+        );
+        setRemainingTime(remaining > 0 ? remaining : 0);
+      }
     } catch (error) {
       console.error("Error fetching game data:", error);
     }
   };
 
+  // Local timer effect: only updates remainingTime
+  useEffect(() => {
+    if (!timerEnabled || !serverGameState) return;
+    if (remainingTime <= 0) return;
+
+    timerIntervalRef.current = setInterval(() => {
+      setRemainingTime(prev => prev - 1);
+    }, 1000);
+
+    return () => clearInterval(timerIntervalRef.current);
+  }, [timerEnabled, serverGameState, remainingTime]);
+
+  // When timer hits zero, fetch backend state once
+  useEffect(() => {
+    if (!timerEnabled || !serverGameState) return;
+    if (remainingTime === 0) {
+      fetchGameData();
+      setSelectedPiece(null);
+    }
+  }, [remainingTime, timerEnabled, serverGameState]);
+
+  // When turn changes, fetch backend state and reset timer
+  useEffect(() => {
+    if (!serverGameState) return;
+    if (lastTurnTeam && lastTurnTeam !== serverGameState.current_team) {
+      setSelectedPiece(null);
+      fetchGameData();
+    }
+    setLastTurnTeam(serverGameState.current_team);
+  }, [serverGameState?.current_team, lastTurnTeam]);
+
+  // On mount: start game and fetch initial state
   useEffect(() => {
     const startGame = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/start_game`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ level, mode: mode || '1player' })
+          body: JSON.stringify({ 
+            level, 
+            mode, 
+            num_turns,
+            playWithTimer: timerEnabled,
+            timerDuration: timerValue
+          })
         });
 
         if (res.ok) {
           const data = await res.json();
           setServerGameState(data.state);
+          setLastTurnTeam(data.state.current_team);
           await fetchGameData();
-        } else {
-          console.error("Failed to start game");
         }
       } catch (error) {
         console.error("Error starting game:", error);
@@ -151,7 +197,8 @@ const GameBoardPage = ({
     };
 
     startGame();
-  }, [level]);
+    // eslint-disable-next-line
+  }, [level, mode, timerEnabled, timerValue, num_turns]);
 
   const specialTiles = [
     { row: 3, col: 1 }, { row: 4, col: 1 }, { row: 5, col: 1 },
@@ -194,6 +241,26 @@ const GameBoardPage = ({
 
   const isSpecialTile = (row, col) => {
     return specialTiles.some(tile => tile.row === row && tile.col === col);
+  };
+
+  // Check if a piece belongs to the current player
+  const isCurrentPlayerPiece = (row, col) => {
+    if (!serverGameState) return false;
+    
+    const piece = isPiece(row, col);
+    const currentTeam = serverGameState.current_team;
+    
+    // In 1-player mode, human can only control LEFT team pieces
+    if (mode === '1player') {
+      return piece === team1Color && currentTeam === 'LEFT';
+    }
+    
+    // In 2-player mode, current player can control their team's pieces
+    if (currentTeam === 'LEFT') {
+      return piece === team1Color;
+    } else {
+      return piece === team2Color;
+    }
   };
 
   // Check if a piece has legal moves available
@@ -246,30 +313,22 @@ const GameBoardPage = ({
     // If clicking the same piece that's already selected → deselect
     if (selectedPiece && selectedPiece.row === row && selectedPiece.col === col) {
       setSelectedPiece(null);
-      console.log("Deselected piece");
       return;
     }
 
-    // If it's your piece and it has legal moves → select it
-    if (!selectedPiece && piece === team1Color) {
+    // If it's current player's piece and it has legal moves → select it
+    if (!selectedPiece && isCurrentPlayerPiece(row, col)) {
       if (pieceHasLegalMoves(row, col)) {
         setSelectedPiece({ row, col });
-        console.log(`Selected piece at frontend (${row}, ${col}) = backend (${frontendToBackend(row, col).backendRow}, ${frontendToBackend(row, col).backendCol})`);
-      } else {
-        console.log("This piece has no legal moves available");
       }
       return;
     }
 
     // If it's the ball and there are kick moves available
     if (!selectedPiece && piece === 'ball') {
-      // Check if there are any kick moves available
       const kickMoves = legalMoves.filter(move => move.type === 'kick');
       if (kickMoves.length > 0) {
         setSelectedPiece({ row, col, isBall: true });
-        console.log(`Selected ball for kicking at frontend (${row}, ${col})`);
-      } else {
-        console.log("No kick moves available for the ball");
       }
       return;
     }
@@ -279,16 +338,12 @@ const GameBoardPage = ({
       const isValidMove = isMoveLegal(selectedPiece.row, selectedPiece.col, row, col);
       
       if (!isValidMove) {
-        console.log("This move is not legal");
-        // Optionally deselect the piece or play error sound
         return;
       }
 
       const moveType = getMoveType(selectedPiece.row, selectedPiece.col, row, col);
       const fromBackend = frontendToBackend(selectedPiece.row, selectedPiece.col);
       const toBackend = frontendToBackend(row, col);
-
-      console.log(`Attempting ${moveType} from backend (${fromBackend.backendRow}, ${fromBackend.backendCol}) to backend (${toBackend.backendRow}, ${toBackend.backendCol})`);
 
       try {
         const res = await fetch(`${API_BASE_URL}/move`, {
@@ -302,7 +357,13 @@ const GameBoardPage = ({
         });
 
         if (!res.ok) {
-          console.log("Move rejected by server");
+          // If timer expired, update UI immediately
+          const errorResponse = await res.json();
+          if (errorResponse.error && errorResponse.error.includes('timer expired')) {
+            console.log("Timer expired during move, updating game state...");
+            setSelectedPiece(null);
+            await fetchGameData();
+          }
           return;
         }
 
@@ -311,8 +372,9 @@ const GameBoardPage = ({
           setServerGameState(response.state);
           setSelectedPiece(null);
           await fetchGameData();
-          if (response.state.current_team === 'RIGHT') {
-            console.log("Sending AI move...");
+          
+          // Handle AI move only in 1-player mode
+          if (mode === '1player' && response.ai_turn) {
             try {
               const aiRes = await fetch(`${API_BASE_URL}/ai_move`, {
                 method: "POST",
@@ -327,11 +389,21 @@ const GameBoardPage = ({
                 }
               }
             } catch (err) {
-                console.error("AI move error:", err);
-              }
+              console.error("AI move error:", err);
+            }
+          }
+          
+          // Check for game over in any mode
+          if (response.game_over) {
+            alert(`Game Over! Winner: ${response.winner || 'None'}`);
           }
         } else {
-          console.log("Move failed:", response.error);
+          // If timer expired, update UI immediately
+          if (response.error && response.error.includes('timer expired')) {
+            console.log("Timer expired during move (response), updating game state...");
+            setSelectedPiece(null);
+            await fetchGameData();
+          }
         }
       } catch (error) {
         console.error("Error sending move:", error);
@@ -356,6 +428,18 @@ const GameBoardPage = ({
   const isValidDestination = (row, col) => {
     if (!selectedPiece) return false;
     return isMoveLegal(selectedPiece.row, selectedPiece.col, row, col);
+  };
+
+  // Get current turn display
+  const getCurrentTurnDisplay = () => {
+    if (!serverGameState) return '';
+    
+    const currentTeam = serverGameState.current_team;
+    if (mode === '1player') {
+      return currentTeam === 'LEFT' ? 'Your Turn' : 'AI Turn';
+    } else {
+      return currentTeam === 'LEFT' ? `${displayTeam1Name}'s Turn` : `${displayTeam2Name}'s Turn`;
+    }
   };
 
   if (!serverGameState) {
@@ -390,7 +474,6 @@ const GameBoardPage = ({
       </div>
     );
   }
-
 
   const renderFieldBorders = () => {
     return (
@@ -477,26 +560,25 @@ const GameBoardPage = ({
       {/* Left Menu Panel */}
       <div className="flex flex-col p-4 bg-[#1C0F01] space-y-6 rounded-xl shadow-lg">
         <button 
-        className="p-3 flex items-center justify-center bg-transparent"
-        onClick={handleHomeClick} 
+          className="p-3 flex items-center justify-center bg-transparent"
+          onClick={handleHomeClick} 
         >
           <img src="/HomeVerticalMenu.svg" alt="Home" className="w-9 h-9" />
         </button>
         <button 
-        className="p-3 flex items-center justify-center bg-transparent"
-        onClick={handlePauseClick} 
+          className="p-3 flex items-center justify-center bg-transparent"
+          onClick={handlePauseClick} 
         >
           <img src="/PauseVerticalMenu.svg" alt="Pause" className="w-9 h-9" />
         </button>
         <button 
-        className="p-3 flex items-center justify-center bg-transparent"
-        onClick={handleRestartClick}
+          className="p-3 flex items-center justify-center bg-transparent"
+          onClick={handleRestartClick}
         >
           <img src="/RestartVerticalMenu.svg" alt="Restart" className="w-9 h-9" />
         </button>
         <button 
-        className="p-3 flex items-center justify-center bg-transparent"
-        
+          className="p-3 flex items-center justify-center bg-transparent"
         >
           <img src="/AboutVerticalMenu.svg" alt="About" className="w-9 h-9" />
         </button>
@@ -512,23 +594,30 @@ const GameBoardPage = ({
           <div className="flex items-center justify-center gap-x-4 w-full mb-2 px-16">
             <div className="px-4 py-2 rounded-lg" style={{ backgroundColor: getChipColor(team1Color) }}>
               <span className="font-bold text-lg" style={{ color: team1Color === 'white' ? '#1C0F01' : '#F5EFD5' }}>
-                {team1Name}
+                {displayTeam1Name}
               </span>
             </div>
             <div className="flex items-center space-x-4">
               <span className="font-bold text-3xl" style={{ color: getChipColor(team1Color) }}>
-                {team1Score}
+                {leftScore}
               </span>
               <span className="font-bold text-3xl text-[#F5EFD5]">-</span>
               <span className="font-bold text-3xl" style={{ color: getChipColor(team2Color) }}>
-                {team2Score}
+                {rightScore}
               </span>
             </div>
             <div className="px-4 py-2 rounded-lg" style={{ backgroundColor: getChipColor(team2Color) }}>
               <span className="font-bold text-lg" style={{ color: team2Color === 'white' ? '#1C0F01' : '#F5EFD5' }}>
-                {team2Name}
+                {displayTeam2Name}
               </span>
             </div>
+          </div>
+
+          {/* Turn Indicator */}
+          <div className="text-center mb-4">
+            <span className="text-[#F5EFD5] font-bold text-lg">
+              {getCurrentTurnDisplay()}
+            </span>
           </div>
 
           {/* Game Board */}
@@ -544,7 +633,7 @@ const GameBoardPage = ({
                   const goalArea = isGoalArea(row, col);
                   const isSelected = selectedPiece && selectedPiece.row === row && selectedPiece.col === col;
                   const isValidDest = isValidDestination(row, col);
-                  const hasLegalMoves = piece === team1Color && pieceHasLegalMoves(row, col);
+                  const canSelectPiece = isCurrentPlayerPiece(row, col) && pieceHasLegalMoves(row, col);
                   
                   return (
                     <div
@@ -554,7 +643,7 @@ const GameBoardPage = ({
                       } ${
                         isValidDest ? 'ring-2 ring-green-400' : ''
                       } ${
-                        hasLegalMoves && !selectedPiece ? 'ring-2 ring-blue-400' : ''
+                        canSelectPiece && !selectedPiece ? 'ring-2 ring-blue-400' : ''
                       }`}
                       onClick={() => handleCellClick(row, col)}
                       style={{
@@ -610,14 +699,7 @@ const GameBoardPage = ({
       {/* Timer Panel */}
       {timerEnabled && (
         <div className="flex items-center justify-center bg-transparent p-4">
-          <div className="bg-[#1C0F01] rounded-2xl p-6 shadow-xl">
-            <div className="flex flex-col items-center justify-center bg-[#FF8C00] rounded-full w-24 h-24 text-center shadow-inner">
-              <div className="text-2xl font-bold text-[#1C0F01]">{timerValue}</div>
-              <div className="text-xs font-semibold text-[#1C0F01]">
-                {timerValue === 1 ? 'second left' : 'seconds left'}
-              </div>
-            </div>
-          </div>
+          <TimerClock secondsLeft={remainingTime} totalSeconds={timerValue} />
         </div>
       )}
 
@@ -648,7 +730,6 @@ const GameBoardPage = ({
         message="Are you sure you want to restart the game?"
         confirmButtonText="Restart"
       />
-      {/* --- End of modals --- */}
     </div>
   );
 };
